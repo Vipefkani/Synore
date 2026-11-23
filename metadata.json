@@ -1,0 +1,6 @@
+{
+  "name": "Synore",
+  "description": "Connected multi-tenant team workspace SaaS for real-time communication, project management, tasks, documents, knowledge base, files, meetings, analytics, and Synora AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
