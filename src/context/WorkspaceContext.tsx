@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { fetchJson } from '../lib/http';
 import type { NotificationItem, User, Workspace, WorkspaceMember } from '../types/synore';
 
 export type AppView =
@@ -107,12 +108,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       if (!(options.body instanceof FormData) && !headers.has('Content-Type')) {
         headers.set('Content-Type', 'application/json');
       }
-      const res = await fetch(url, { ...options, headers });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data.error || `Request failed (${res.status})`);
-      }
-      return data as T;
+      return fetchJson<T>(url, { ...options, headers });
     },
     [token]
   );

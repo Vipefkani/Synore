@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { SynoreLogo } from './SynoreLogo';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { fetchJson } from '../lib/http';
 import type { User, Workspace, WorkspaceRole } from '../types/synore';
 
 const WORKSPACE_TYPES = [
@@ -47,13 +48,14 @@ export function AuthScreen() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: loginEmail, password: loginPass }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Sign in failed');
+      const data = await fetchJson<{ token: string; user: User; workspaces: Workspace[] }>(
+        '/api/auth/login',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: loginEmail, password: loginPass }),
+        }
+      );
       setSession(data.token, data.user, data.workspaces);
       notify('success', `Signed in as ${data.user.fullName}`);
     } catch (err: unknown) {
@@ -68,13 +70,16 @@ export function AuthScreen() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/register', {
+      const data = await fetchJson<{
+        token: string;
+        user: User;
+        workspaces: Workspace[];
+        verificationToken: string;
+      }>('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, fullName, title }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Registration failed');
       setPendingVerify({ token: data.verificationToken, email: data.user.email });
       setSession(data.token, data.user, data.workspaces);
     } catch (err: unknown) {
@@ -89,13 +94,11 @@ export function AuthScreen() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/forgot-password', {
+      const data = await fetchJson<{ resetCodePreview?: string }>('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Request failed');
       if (data.resetCodePreview) setResetPreview(data.resetCodePreview);
       setMode('reset');
     } catch (err: unknown) {
@@ -110,13 +113,11 @@ export function AuthScreen() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/reset-password', {
+      await fetchJson('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, resetCode, newPassword }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Reset failed');
       notify('success', 'Password reset. Please sign in.');
       setMode('login');
       setPassword(newPassword);
